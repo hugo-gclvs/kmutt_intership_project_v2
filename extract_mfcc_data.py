@@ -52,7 +52,6 @@ def save_mfcc(dataset_path, json_path, voc_only=True, num_mfcc=13, n_fft=2048, h
                     samples_per_track = SAMPLE_RATE * track_duration
                     samples_per_segment = int(SAMPLE_RATE * SEGMENT_DURATION)
                     num_segments = int(samples_per_track / samples_per_segment)
-                    num_mfcc_vectors_per_segment = math.ceil(samples_per_segment / hop_length)
 
                     # process all segments of audio file
                     for d in range(num_segments):
@@ -66,8 +65,8 @@ def save_mfcc(dataset_path, json_path, voc_only=True, num_mfcc=13, n_fft=2048, h
                         mfcc = mfcc.T
 
                         # store only mfcc feature with expected number of vectors
-                        if len(mfcc) == num_mfcc_vectors_per_segment:
-                            data["mfcc"].append(mfcc.tolist())
+                        if len(mfcc) > 0:
+                            data["mfcc"].append(mfcc[0].tolist())
                             data["labels"].append(i-1)
                             print("{}, segment:{}".format(file_path, d+1))
 
