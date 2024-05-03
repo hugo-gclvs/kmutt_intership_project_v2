@@ -67,16 +67,19 @@ if __name__ == "__main__":
         keras.layers.Flatten(input_shape=(X.shape[1], X.shape[2])),
 
         # 1st dense layer
-        keras.layers.Dense(512, activation='relu'),
+        keras.layers.Dense(512, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001)),
+        keras.layers.Dropout(0.3),
 
         # 2nd dense layer
-        keras.layers.Dense(256, activation='relu'),
+        keras.layers.Dense(256, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001)),
+        keras.layers.Dropout(0.3),
 
         # 3rd dense layer
-        keras.layers.Dense(64, activation='relu'),
+        keras.layers.Dense(64, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001)),
+        keras.layers.Dropout(0.3),
 
         # output layer
-        keras.layers.Dense(3, activation='softmax')
+        keras.layers.Dense(10, activation='softmax')
     ])
 
     # compile model
