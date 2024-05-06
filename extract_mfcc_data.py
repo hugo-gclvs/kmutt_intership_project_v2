@@ -13,8 +13,7 @@ OVERLAP_DURATION = 0.01   # overlap duration in seconds
 NUM_MFCC = 16
 # N_FFT = 2 ** int(np.ceil(np.log2(SEGMENT_DURATION * SAMPLE_RATE)))
 N_FFT = 551
-# HOP_LENGTH = int(np.floor(OVERLAP_DURATION * SAMPLE_RATE))
-HOP_LENGTH = 551
+HOP_LENGTH = int(np.floor(OVERLAP_DURATION * SAMPLE_RATE))
 
 def extract_mfcc(file_path: str, num_mfcc: int, n_fft: int, hop_length: int) -> List[List[float]]:
     """Extract MFCCs from an audio file."""
