@@ -6,14 +6,15 @@ import numpy as np
 from typing import Tuple, Dict, List
 
 DATASET_PATH = "original_dataset"
-JSON_PATH = "data_25ms.json"
+JSON_PATH = "data_25ms_551.json"
 SAMPLE_RATE = 22050
 SEGMENT_DURATION = 0.025  # duration of each segment in seconds
 OVERLAP_DURATION = 0.01   # overlap duration in seconds
-NUM_MFCC = 13
+NUM_MFCC = 16
 # N_FFT = 2 ** int(np.ceil(np.log2(SEGMENT_DURATION * SAMPLE_RATE)))
-N_FFT = 512
-HOP_LENGTH = int(np.floor(OVERLAP_DURATION * SAMPLE_RATE))
+N_FFT = 551
+# HOP_LENGTH = int(np.floor(OVERLAP_DURATION * SAMPLE_RATE))
+HOP_LENGTH = 551
 
 def extract_mfcc(file_path: str, num_mfcc: int, n_fft: int, hop_length: int) -> List[List[float]]:
     """Extract MFCCs from an audio file."""
@@ -23,14 +24,12 @@ def extract_mfcc(file_path: str, num_mfcc: int, n_fft: int, hop_length: int) -> 
     samples_per_segment = int(SAMPLE_RATE * SEGMENT_DURATION)
     num_segments = int(samples_per_track / samples_per_segment)
 
-    # S'assurer que n_fft est approprié pour la longueur du signal
     n_fft = min(len(signal), n_fft)
 
     mfccs = []
     for d in range(num_segments):
         start = samples_per_segment * d
         finish = start + samples_per_segment
-        # Vérifier si la fin du segment dépasse la longueur du signal
         if finish > len(signal):
             finish = len(signal)
         mfcc = librosa.feature.mfcc(y=signal[start:finish], sr=SAMPLE_RATE, n_mfcc=num_mfcc, n_fft=n_fft, hop_length=hop_length)

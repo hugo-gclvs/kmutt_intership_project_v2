@@ -72,6 +72,26 @@ plt.ylabel("Frequency")
 plt.colorbar(format="%+2.0f dB")
 plt.title("Spectrogram (dB)")
 
+# Create a Mel filter bank
+mel_filter_bank = librosa.filters.mel(sr=sr, n_fft=n_fft, n_mels=26)
+
+# Apply the filter bank to the spectrogram
+mel_spectrogram = np.dot(mel_filter_bank, spectrogram)
+
+# Display Mel spectrogram
+plt.figure(figsize=FIG_SIZE)
+librosa.display.specshow(data=mel_spectrogram, sr=sr, hop_length=hop_length, x_axis='time', y_axis='mel')
+plt.colorbar(format="%+2.0f dB")
+plt.title("Mel Spectrogram")
+
+# Apply logarithm to cast amplitude to Decibels
+log_mel_spectrogram = librosa.amplitude_to_db(mel_spectrogram)
+
+plt.figure(figsize=FIG_SIZE)
+librosa.display.specshow(data=log_mel_spectrogram, sr=sr, hop_length=hop_length, x_axis='time', y_axis='mel')
+plt.colorbar(format="%+2.0f dB")
+plt.title("Mel Spectrogram (dB)")
+
 
 # MFCCs
 # extract 16 MFCCs
