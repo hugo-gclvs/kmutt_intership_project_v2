@@ -1,81 +1,65 @@
 import json
 import os
-import math
+from pathlib import Path
 import librosa
+import numpy as np
+from typing import Tuple, Dict, List
 
 DATASET_PATH = "original_dataset"
 JSON_PATH = "data_25ms.json"
 SAMPLE_RATE = 22050
-SEGMENT_DURATION = 0.025 # duration of each segment in secondes
+SEGMENT_DURATION = 0.025  # duration of each segment in seconds
+OVERLAP_DURATION = 0.01   # overlap duration in seconds
 NUM_MFCC = 13
-N_FFT = int(SEGMENT_DURATION * SAMPLE_RATE)
-HOP_LENGTH = int(0.01 * SAMPLE_RATE) # 10ms
+# N_FFT = 2 ** int(np.ceil(np.log2(SEGMENT_DURATION * SAMPLE_RATE)))
+N_FFT = 512
+HOP_LENGTH = int(np.floor(OVERLAP_DURATION * SAMPLE_RATE))
 
-def save_mfcc(dataset_path, json_path, voc_only=True, num_mfcc=13, n_fft=2048, hop_length=512):
-    """Extracts MFCCs from audio dataset and saves them into a json file along witgh class labels.
+def extract_mfcc(file_path: str, num_mfcc: int, n_fft: int, hop_length: int) -> List[List[float]]:
+    """Extract MFCCs from an audio file."""
+    signal, sample_rate = librosa.load(file_path, sr=SAMPLE_RATE)
+    track_duration = librosa.get_duration(y=signal, sr=SAMPLE_RATE)
+    samples_per_track = SAMPLE_RATE * track_duration
+    samples_per_segment = int(SAMPLE_RATE * SEGMENT_DURATION)
+    num_segments = int(samples_per_track / samples_per_segment)
 
-        :param dataset_path (str): Path to dataset
-        :param json_path (str): Path to json file used to save MFCCs
-        :param voc_only (bool): If True, only process files with 'voc' in their name. If False, process files without 'voc' in their name.
-        :param num_mfcc (int): Number of coefficients to extract
-        :param n_fft (int): Interval we consider to apply FFT. Measured in # of samples
-        :param hop_length (int): Sliding window for FFT. Measured in # of samples
-        :return:
-        """
+    # S'assurer que n_fft est approprié pour la longueur du signal
+    n_fft = min(len(signal), n_fft)
 
-    # dictionary to store mapping, labels, and MFCCs
-    data = {
-        "mapping": [],
-        "labels": [],
-        "mfcc": [],
-        "files": []
-    }
+    mfccs = []
+    for d in range(num_segments):
+        start = samples_per_segment * d
+        finish = start + samples_per_segment
+        # Vérifier si la fin du segment dépasse la longueur du signal
+        if finish > len(signal):
+            finish = len(signal)
+        mfcc = librosa.feature.mfcc(y=signal[start:finish], sr=SAMPLE_RATE, n_mfcc=num_mfcc, n_fft=n_fft, hop_length=hop_length)
+        mfccs.append(mfcc.T.tolist())
+    return mfccs
 
-    # loop through all class sub-folder
-    for i, (dirpath, dirnames, filenames) in enumerate(os.walk(dataset_path)):
 
-        # ensure we're processing a class sub-folder level
-        if dirpath is not dataset_path:
+def save_mfcc(dataset_path: str, json_path: str, voc_only: bool = True, num_mfcc: int = 13, n_fft: int = 2048, hop_length: int = 512) -> None:
+    """Extracts MFCCs from audio dataset and saves them into a json file along with class labels."""
+    data: Dict[str, List] = {"mapping": [], "labels": [], "mfcc": [], "files": []}
+    dataset_path = Path(dataset_path)
 
-            # save class label (i.e., sub-folder name) in the mapping
-            semantic_label = dirpath.split("/")[-1]
+    for i, (dirpath, _, filenames) in enumerate(os.walk(dataset_path)):
+        if dirpath != dataset_path:
+            semantic_label = Path(dirpath).name
             data["mapping"].append(semantic_label)
-            print("\nProcessing: {}".format(semantic_label))
+            print(f"\nProcessing: {semantic_label}")
 
-            # process all audio files in class sub-dir
             for f in filenames:
+                if ('voc' in f) == voc_only:
+                    file_path = str(Path(dirpath) / f)
+                    mfccs = extract_mfcc(file_path, num_mfcc, n_fft, hop_length)
+                    data["mfcc"].extend(mfccs)
+                    data["labels"].extend([i - 1] * len(mfccs))
+                    data["files"].extend([file_path] * len(mfccs))
+                    print(f"{file_path}, segments: {len(mfccs)}")
 
-                # check if 'voc' is in the file name
-                if voc_only and 'voc' in f or not voc_only and 'voc' not in f:
-
-                    # load audio file
-                    file_path = os.path.join(dirpath, f)
-                    signal, sample_rate = librosa.load(file_path, sr=SAMPLE_RATE)
-
-                    # get track duration and calculate samples per track
-                    track_duration = librosa.get_duration(y=signal, sr=SAMPLE_RATE)
-                    samples_per_track = SAMPLE_RATE * track_duration
-                    samples_per_segment = int(SAMPLE_RATE * SEGMENT_DURATION)
-                    num_segments = int(samples_per_track / samples_per_segment)
-
-                    # process all segments of audio file
-                    for d in range(num_segments):
-
-                        # calculate start and finish sample for current segment
-                        start = samples_per_segment * d
-                        finish = start + samples_per_segment
-
-                        # extract mfcc
-                        mfcc = librosa.feature.mfcc(y=signal[start:finish], sr=SAMPLE_RATE, n_mfcc=num_mfcc, n_fft=n_fft, hop_length=hop_length)
-
-                        data["mfcc"].append(mfcc.T.tolist())
-                        data["labels"].append(i-1)
-                        data["files"].append(file_path)
-                        print("{}, segment:{}".format(file_path, d+1))
-
-    # save MFCCs to json file
     with open(json_path, "w") as fp:
         json.dump(data, fp, indent=4)
-        
+
 if __name__ == "__main__":
     save_mfcc(DATASET_PATH, JSON_PATH, voc_only=True, num_mfcc=NUM_MFCC, n_fft=N_FFT, hop_length=HOP_LENGTH)
