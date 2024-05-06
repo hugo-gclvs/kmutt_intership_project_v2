@@ -7,6 +7,9 @@ DATASET_PATH = "original_dataset"
 JSON_PATH = "data_25ms.json"
 SAMPLE_RATE = 22050
 SEGMENT_DURATION = 0.025 # duration of each segment in secondes
+NUM_MFCC = 13
+N_FFT = int(SEGMENT_DURATION * SAMPLE_RATE)
+HOP_LENGTH = int(0.01 * SAMPLE_RATE) # 10ms
 
 def save_mfcc(dataset_path, json_path, voc_only=True, num_mfcc=13, n_fft=2048, hop_length=512):
     """Extracts MFCCs from audio dataset and saves them into a json file along witgh class labels.
@@ -22,9 +25,10 @@ def save_mfcc(dataset_path, json_path, voc_only=True, num_mfcc=13, n_fft=2048, h
 
     # dictionary to store mapping, labels, and MFCCs
     data = {
-        "mapping": ["DPR", "RMT", "HRK"],
+        "mapping": [],
         "labels": [],
-        "mfcc": []
+        "mfcc": [],
+        "files": []
     }
 
     # loop through all class sub-folder
@@ -35,6 +39,7 @@ def save_mfcc(dataset_path, json_path, voc_only=True, num_mfcc=13, n_fft=2048, h
 
             # save class label (i.e., sub-folder name) in the mapping
             semantic_label = dirpath.split("/")[-1]
+            data["mapping"].append(semantic_label)
             print("\nProcessing: {}".format(semantic_label))
 
             # process all audio files in class sub-dir
@@ -61,19 +66,16 @@ def save_mfcc(dataset_path, json_path, voc_only=True, num_mfcc=13, n_fft=2048, h
                         finish = start + samples_per_segment
 
                         # extract mfcc
-                        mfcc = librosa.feature.mfcc(y=signal[start:finish], sr=sample_rate, n_mfcc=num_mfcc, n_fft=n_fft, hop_length=hop_length)
-                        mfcc = mfcc.T
+                        mfcc = librosa.feature.mfcc(y=signal[start:finish], sr=SAMPLE_RATE, n_mfcc=num_mfcc, n_fft=n_fft, hop_length=hop_length)
 
-                        # store only mfcc feature with expected number of vectors
-                        if len(mfcc) > 0:
-                            data["mfcc"].append(mfcc[0].tolist())
-                            data["labels"].append(i-1)
-                            print("{}, segment:{}".format(file_path, d+1))
+                        data["mfcc"].append(mfcc.T.tolist())
+                        data["labels"].append(i-1)
+                        data["files"].append(file_path)
+                        print("{}, segment:{}".format(file_path, d+1))
 
     # save MFCCs to json file
     with open(json_path, "w") as fp:
         json.dump(data, fp, indent=4)
         
-        
 if __name__ == "__main__":
-    save_mfcc(DATASET_PATH, JSON_PATH, voc_only=True)
+    save_mfcc(DATASET_PATH, JSON_PATH, voc_only=True, num_mfcc=NUM_MFCC, n_fft=N_FFT, hop_length=HOP_LENGTH)
