@@ -1,3 +1,4 @@
 /.venv
 /original_dataset
 data_25ms.json
+/data

@@ -5,15 +5,16 @@ import librosa
 import numpy as np
 from typing import Tuple, Dict, List
 
-DATASET_PATH = "original_dataset"
-JSON_PATH = "data_25ms_551.json"
-SAMPLE_RATE = 22050
-SEGMENT_DURATION = 0.025  # duration of each segment in seconds
-OVERLAP_DURATION = 0.01   # overlap duration in seconds
+DATASET_PATH = "./data/original_dataset"
+JSON_PATH = "./data/data_25ms_256.json"
+SAMPLE_RATE = 10000
+SEGMENT_DURATION = 0.0256  # duration of each segment in seconds
+OVERLAP_DURATION = 0.02   # overlap duration in seconds
 NUM_MFCC = 16
 # N_FFT = 2 ** int(np.ceil(np.log2(SEGMENT_DURATION * SAMPLE_RATE)))
-N_FFT = 551
-HOP_LENGTH = int(np.floor(OVERLAP_DURATION * SAMPLE_RATE))
+N_FFT = 256
+HOP_LENGTH = int((2 ** int(np.ceil(np.log2(SEGMENT_DURATION * SAMPLE_RATE)))) / 2)
+# HOP_LENGTH = int(np.floor(OVERLAP_DURATION * SAMPLE_RATE))
 
 def extract_mfcc(file_path: str, num_mfcc: int, n_fft: int, hop_length: int) -> List[List[float]]:
     """Extract MFCCs from an audio file."""

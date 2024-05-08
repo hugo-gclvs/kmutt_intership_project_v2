@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 FIG_SIZE = (15,10)
 
-signal, sr = librosa.load('original_dataset/DPR/011106nt1_intvoc.wav', sr=22050)
+signal, sr = librosa.load('original_dataset/DPR/011106nt1_intvoc.wav', sr=10000)
 
 plt.figure(figsize=FIG_SIZE)
 librosa.display.waveshow(signal, sr=sr)
