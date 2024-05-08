@@ -2,3 +2,5 @@
 /original_dataset
 data_25ms.json
 /data
+__pycache__
+__init__.py
