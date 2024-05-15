@@ -31,6 +31,7 @@ def load_data_with_mapping(data_path):
 
     X = np.array(data["mfcc"])
     y = np.array(data["labels"])
-    mapping = data["mapping"]
+    mapping = np.array(data["mapping"])
+    
     print("Training sets loaded!")
     return X, y, mapping
