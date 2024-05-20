@@ -60,5 +60,5 @@ def load_patient_with_mapping(data_path: str) -> Tuple[np.ndarray, np.ndarray, L
     y = np.array(labels_list)
     mapping = data["mapping"]
     
-    print("Dataset loaded for visualization!")
+    print("Dataset loaded !")
     return X, y, mapping
