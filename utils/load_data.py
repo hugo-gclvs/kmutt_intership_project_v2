@@ -62,3 +62,22 @@ def load_patient_with_mapping(data_path: str) -> Tuple[np.ndarray, np.ndarray, L
     
     print("Dataset loaded !")
     return X, y, mapping
+
+def load_patient_data(data_path: str) -> Dict[str, Any]:
+    """Loads patient data from json file and structures it by patient.
+
+    :param data_path (str): Path to json file containing data
+    :return data (dict): Structured patient data
+    """
+    with open(data_path, "r") as fp:
+        data = json.load(fp)
+
+    patients = {}
+    for key, value in data["patients"].items():
+        patient_id = key.split('/')[-1].split('_')[0]  # Extract patient ID from the file path
+        if patient_id not in patients:
+            patients[patient_id] = {"mfcc": [], "label": value["label"], "file": []}
+        patients[patient_id]["mfcc"].extend(value["mfcc"])
+        patients[patient_id]["file"].append(value["file"])
+
+    return patients
